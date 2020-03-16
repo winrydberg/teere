@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "79747722156",
+    "firebase_url": "https://dfmc-db66d.firebaseio.com",
+    "project_id": "dfmc-db66d",
+    "storage_bucket": "dfmc-db66d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:79747722156:android:ea33bae86c25c28a79a809",
+        "android_client_info": {
+          "package_name": "com.example.dfmc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "79747722156-nfsfdq03m3ktqtg1c2su71r2m98alnm7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDltJi8iGjgqWmqmd76DTVNVWuSVcTXsq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "79747722156-nfsfdq03m3ktqtg1c2su71r2m98alnm7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dfmc/src/components/applicant.dart';
 import 'package:dfmc/src/components/newapplocation.dart';
+import 'package:dfmc/src/components/notifications.dart';
 import 'package:dfmc/src/components/status.dart';
 import 'package:dfmc/src/models/user.dart';
 import 'package:dfmc/src/providers/appsate.dart';
@@ -16,6 +17,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -29,24 +32,58 @@ class HomeScreenState extends State<HomeScreen> {
   int _selection;
   BuildContext context;
 
+  // @override
+  // void initState() {
+  //   // TODO: implement initState
+  //   super.initState();
+  //   SStorageProvider.getTokeninState();
+  // }
+  
+
+      final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    SStorageProvider.getTokeninState();
+   
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        // _selectedIndex =1;
+        print("onMessage: $message");
+        // _showItemDialog(message);
+      },
+      // onBackgroundMessage: myBackgroundMessageHandler,
+      onLaunch: (Map<String, dynamic> message) async {
+        // _selectedIndex =1;
+        print("onLaunch: $message");
+        // _navigateToItemDetail(message);
+      },
+      onResume: (Map<String, dynamic> message) async {
+        // _selectedIndex =1;
+        print("onResume: $message");
+
+        // _navigateToItemDetail(message);
+      },
+    );
+
+     SStorageProvider.getTokeninState();
   }
 
   @override
   Widget build(BuildContext context) {
     context = context;
     double screenWidth = MediaQuery.of(context).size.width;
+    final appState = Provider.of<AppState>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Teere'),
+        title: Text('DFMC Mobile'),
         actions: <Widget>[
           PopupMenuButton(onSelected: (dynamic selected) {
             if (selected == "1") {
-              Navigator.push(context,
+              final _storage = new FlutterSecureStorage();
+              _storage.deleteAll();
+              Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (context) => LoginScreen()));
             } else if (selected == "2") {
               Navigator.push(context,
@@ -98,402 +135,245 @@ class HomeScreenState extends State<HomeScreen> {
           }),
         ],
       ),
-      body: pageNavigator(context).elementAt(_selectedIndex),
+      body: Container(
+        margin: const EdgeInsets.only(top: 15.0),
+        child: StaggeredGridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12.0,
+          mainAxisSpacing: 12.0,
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          children: <Widget>[
+            _buildTile(
+              Padding
+              (
+              
+                padding: const EdgeInsets.all(20.0),
+                child: Row
+                (
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>
+                  [
+                    Column
+                    (
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>
+                      [
+                        Text('Total Applications', style: TextStyle(color: Colors.blueAccent)),
+                        FutureBuilder(
+                          future: appState.getTotalApplication(),
+                          builder:  (BuildContext context, AsyncSnapshot snapshot){
+                              if( snapshot.connectionState ==ConnectionState.done){
+                                if(snapshot.data != null){
+                                    return  Text('${snapshot.data}', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 34.0));
+                                }else{
+                                   return  Text('0', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 34.0));
+                                }
+                              }else{
+                                return CircularProgressIndicator();
+                              }
+                          },
+                        )
+                       
+                      ],
+                    ),
+                    Material
+                    (
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(24.0),
+                      child: Center
+                      (
+                        child: Padding
+                        (
+                          padding: const EdgeInsets.all(16.0),
+                          child: Icon(Icons.timeline, color: Colors.white, size: 30.0),
+                        )
+                      )
+                    )
+                  ]
+                ),
+              ),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => StatusScreen())),
+               
+            ),
+            _buildTile(
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column
+                (
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>
+                  [
+                    Material
+                    (
+                      color: Colors.teal,
+                      shape: CircleBorder(),
+                      child: Padding
+                      (
+                        padding: const EdgeInsets.all(16.0),
+                        child: Icon(Icons.add_circle_outline, color: Colors.white, size: 30.0),
+                      )
+                    ),
+                    Padding(padding: EdgeInsets.only(bottom: 16.0)),
+                    Text('New', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 24.0)),
+                    Text('New Application', style: TextStyle(color: Colors.black45)),
+                  ]
+                ),
+              ),
+               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ApplicationScreen())),
+               
+            ),
+            _buildTile(
+              Padding
+              (
+                padding: const EdgeInsets.all(20.0),
+                child: Column
+                (
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>
+                  [
+                    Material
+                    (
+                      color: Colors.amber,
+                      shape: CircleBorder(),
+                      child: Padding
+                      (
+                        padding: EdgeInsets.all(16.0),
+                        child: Icon(Icons.notifications, color: Colors.white, size: 30.0),
+                      )
+                    ),
+                    Padding(padding: EdgeInsets.only(bottom: 16.0)),
+                    Text('Alerts', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 24.0)),
+                    Text('View Notifications', style: TextStyle(color: Colors.black45)),
+                  ]
+                ),
+              ),
+               onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => NotificationsScreen())),
+               
+            ),
+          
+            _buildTile(
+              Padding
+              (
+                padding: const EdgeInsets.all(24.0),
+                child: Row
+                (
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>
+                  [
+                    Expanded(
+                      flex: 5,
+                                          child: Column
+                      (
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>
+                        [
+                          Text('Hello, ', style: TextStyle(color: Colors.redAccent)),
+                          FutureBuilder(
+                            future: getData(),
+                            builder: (BuildContext context, AsyncSnapshot snapshot){
+                                if(snapshot.connectionState == ConnectionState.done){
+                                     if(snapshot.data != null){
+                                        return Column(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: <Widget>[
+                                            Align(
+                                              alignment: Alignment.topLeft,
+                                              child: Text('${snapshot.data.firstname}', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700, fontSize: 20.0)),
+                                            ),
 
-      // Container(
-      //         child: FabCircularMenu(
-      //         child: Container(
-
-      //                             child: Center(
-      //                 child: Padding(
-      //                   padding: const EdgeInsets.only(bottom: 256.0),
-      //                   child: Center(
-      //                         child: _widgetOptions.elementAt(_selectedIndex),
-      //                     ),
-
-      //                 )
-      //             ),
-
-      //         ),
-      //         ringDiameter: screenWidth * 0.7,
-      //         ringColor: Color(0xFF6B1024),
-      //         ringWidth: 100,
-      //         options: <Widget>[
-      //           IconButton(icon: Icon(Icons.share), onPressed: () {}, iconSize: 30.0, color: Colors.white),
-      //           IconButton(icon: Icon(FontAwesomeIcons.facebook), onPressed: () {}, iconSize: 30.0, color: Color(0xFF3588EB)),
-      //           IconButton(icon: Icon(FontAwesomeIcons.whatsapp), onPressed: () {}, iconSize: 30.0, color: Colors.green),
-      //           IconButton(icon: Icon(FontAwesomeIcons.twitter), onPressed: () {}, iconSize: 30.0, color: Color(0xFF83D7FA)),
-      //         ],
-
-      //   ),
-      // ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            title: Text('Home'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            title: Text('Notifications'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            title: Text('Profile'),
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Color(0xFF6B1024),
-        onTap: _onItemTapped,
-      ),
-    );
-  }
-
-  List<Widget> pageNavigator(BuildContext context) {
-    List<Widget> _widgetOptions = <Widget>[
-      home(context),
-      Text(
-        'Index 2: School',
-      ),
-      ProfileScreen(),
-    ];
-
-    return _widgetOptions;
-  }
-
-  static Widget home(BuildContext context) {
-    return Container(
-      // margin: const EdgeInsets.only(right: 50.0),
-      child: Column(
-        children: <Widget>[
-          greeting(),
-          // NewApplication(),
-          Container(
-            margin: const EdgeInsets.all(10.0),
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
-                margin: const EdgeInsets.only(right: 40.0),
-                child: Stack(
-                  overflow: Overflow.visible,
-                  alignment: AlignmentDirectional.topEnd,
-                  children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ApplicationScreen()));
-                      },
-                      child: Container(
-                        width: 350,
-                        height: 100,
-                        child: Center(
-                            child: Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Text(
-                                "APPLY NOW",
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20),
-                              ),
-                              Container(
-                                  margin: const EdgeInsets.only(right: 20),
-                                  child: Text(
-                                    "Submit a new application",
-                                    style: TextStyle(color: Colors.white),
-                                  )),
-                            ],
-                          ),
-                        )),
-                        decoration: BoxDecoration(
-                            shape: BoxShape.rectangle,
-                            // image: DecorationImage(
-                            //   image: AssetImage("lib/assets/images/top.png"),
-                            //   fit: BoxFit.fitWidth,
-                            //   alignment: Alignment.topCenter,
-                            // ),
-                            color: Colors.green,
-                            borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(35.0),
-                                bottomRight: Radius.circular(35.0))),
+                                           Container(
+                                             width: MediaQuery.of(context).size.width*0.5,
+                                             child: Text('Welcome to DFMC Mobile App, Send Your Application Today.', style: TextStyle(color: Colors.black45))),
+                                            
+                                          ],
+                                        );
+                                     }else{
+                                       return Text("Welcome .Send Your Application Today.");
+                                     }
+                                }else{
+                                    return CircularProgressIndicator();
+                                }
+                            },
+                          )
+                          
+                        ],
                       ),
                     ),
-                    Positioned(
-                      top: -10,
-                      right: -45,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ApplicationScreen()));
-                        },
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.add_circle,
-                              color: Colors.green,
-                            ),
-                            iconSize: 35,
-                          ),
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black87.withOpacity(0.4),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset:
-                                    Offset(0, 0), // changes position of shadow
-                              ),
-                            ],
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                            // backgroundBlendMode: BlendMode.color
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                )),
-          ),
-
-          Expanded(
-            flex: 1,
-            child: Container(
-                margin: const EdgeInsets.only(right: 40.0),
-                child: Stack(
-                  overflow: Overflow.visible,
-                  alignment: AlignmentDirectional.topEnd,
-                  children: <Widget>[
-                    Container(
-                      width: 350,
-                      height: 100,
-                      child: Center(
+                    Material
+                    (
+                      borderRadius: BorderRadius.circular(24.0),
+                      child: Center
+                      (
+                        child: Padding
+                        (
+                          padding: EdgeInsets.only(top:12.0, left: 16.0, bottom: 16.0),
                           child: Container(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text(
-                              "CHECK STATUS",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20),
-                            ),
-                            Container(
-                                margin: const EdgeInsets.only(right: 20),
-                                child: Text(
-                                  "Check the status of all applications on the go",
-                                  style: TextStyle(color: Colors.white),
-                                )),
-                          ],
-                        ),
-                      )),
-                      decoration: BoxDecoration(
-                          shape: BoxShape.rectangle,
-                          // image: DecorationImage(
-                          //   image: AssetImage("lib/assets/images/top.png"),
-                          //   fit: BoxFit.fitWidth,
-                          //   alignment: Alignment.topCenter,
-                          // ),
-                          color: Colors.brown,
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(35.0),
-                              bottomRight: Radius.circular(35.0))),
-                    ),
-                    Positioned(
-                      top: -10,
-                      right: -45,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => StatusScreen()));
-                        },
-                        child: Container(
-                          width: 90,
-                          height: 90,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.help,
-                              color: Colors.brown,
-                            ),
-                            iconSize: 35,
-                          ),
-                          decoration: BoxDecoration(
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black87.withOpacity(0.4),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset:
-                                    Offset(0, 0), // changes position of shadow
-                              ),
-                            ],
-                            shape: BoxShape.circle,
-                            color: Colors.white,
-                          ),
+                      margin: const EdgeInsets.only(top: 10.0),
+                      width: 80.0,
+                      height: 80.0,
+                      decoration: new BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: new DecorationImage(
+                          fit: BoxFit.fill,
+                          image: AssetImage("lib/assets/images/user.png"),
                         ),
                       ),
                     ),
-                  ],
-                )),
-          )
-        ],
-      ),
+                        )
+                      )
+                    )
+                  ]
+                ),
+              ),
+
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProfileScreen())),
+               
+
+            )
+          ],
+          staggeredTiles: [
+            StaggeredTile.extent(2, 110.0),
+            StaggeredTile.extent(1, 180.0),
+            StaggeredTile.extent(1, 180.0),
+            StaggeredTile.extent(2, 220.0),
+            // StaggeredTile.extent(2, 110.0),
+          ],
+        ),
+      )
+
     );
   }
 
-  static Widget greeting() {
-    DateTime now = new DateTime.now();
-    print(now.hour);
-    if (now.hour > 0 && now.hour < 12) {
-      return FutureBuilder(
-          future: getData(),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.data != null) {
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      margin: const EdgeInsets.only(top: 10.0),
-                      width: 100.0,
-                      height: 100.0,
-                      decoration: new BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: new DecorationImage(
-                          fit: BoxFit.fill,
-                          image: AssetImage("lib/assets/images/user.png"),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      margin:
-                          const EdgeInsets.only(left: 10, right: 10, top: 20.0),
-                      height: 50.0,
-                      width: double.infinity,
-                      child: Center(
-                        child: Text(
-                          'Good Morning, Solomon',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 15.0),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return CircularProgressIndicator();
-            }
-          });
-    } else if (now.hour > 12 && now.hour < 16) {
-      return FutureBuilder(
-          future: getData(),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.data != null) {
-              return Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      margin: const EdgeInsets.only(top: 10.0),
-                      width: 100.0,
-                      height: 100.0,
-                      decoration: new BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: new DecorationImage(
-                          fit: BoxFit.fill,
-                          image: AssetImage("lib/assets/images/user.png"),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      margin:
-                          const EdgeInsets.only(left: 10, right: 10, top: 20.0),
-                      height: 50.0,
-                      width: double.infinity,
-                      child: Center(
-                        child: Text(
-                          'Good Afternoon, ${snapshot.data.firstname}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 15.0),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return CircularProgressIndicator();
-            }
-          });
-    } else {
-      return FutureBuilder(
-          future: getData(),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.data != null) {
-              return Align(
-                alignment: Alignment.center,
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      margin: const EdgeInsets.only(top: 10.0),
-                      width: 100.0,
-                      height: 100.0,
-                      decoration: new BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: new DecorationImage(
-                          fit: BoxFit.fill,
-                          image: AssetImage("lib/assets/images/user.png"),
-                        ),
-                      ),
-                    ),
-                    Container(
-                      margin:
-                          const EdgeInsets.only(left: 10, right: 10, top: 20.0),
-                      height: 50.0,
-                      width: double.infinity,
-                      child: Center(
-                        child: Text(
-                          'Good Evening, ${snapshot.data.firstname}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 15.0),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return CircularProgressIndicator();
-            }
-          });
-    }
-  }
+  
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   static Future<UserModel> getData({key}) async {
     final _storage = new FlutterSecureStorage();
     String value = await _storage.read(key: "user");
     Map<String, dynamic> usermap = json.decode(value);
     return UserModel.fromJson(usermap);
+  }
+
+   Widget _buildTile(Widget child, {Function() onTap}) {
+    return Material(
+      elevation: 14.0,
+      borderRadius: BorderRadius.circular(12.0),
+      shadowColor: Color(0x802196F3),
+      child: InkWell
+      (
+        // Do onTap() if it isn't null, otherwise do print()
+        onTap: onTap != null ? () => onTap() : () {
+            print(onTap);
+         },
+        child: child
+      )
+    );
   }
 }

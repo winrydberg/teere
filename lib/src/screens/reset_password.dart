@@ -1,5 +1,7 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:dfmc/src/providers/appsate.dart';
-import 'package:dfmc/src/screens/forgot_password.dart';
 import 'package:dfmc/src/screens/home.dart';
 import 'package:dfmc/src/screens/register.dart';
 import 'package:flutter/material.dart';
@@ -7,29 +9,35 @@ import 'package:dfmc/src/mixins/validation_mixin.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-class LoginScreen extends StatefulWidget {
+class ResetPasswordScreen extends StatefulWidget {
+
+  final String phoneno;
+  ResetPasswordScreen(this.phoneno);
   @override
   State<StatefulWidget> createState() {
-    return LoginScreenState();
+    return ResetPasswordScreenState();
   }
 }
 
-class LoginScreenState extends State<LoginScreen> with ValidationMixin {
+class ResetPasswordScreenState extends State<ResetPasswordScreen> with ValidationMixin {
   //creates a reference to the formstate of the form
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   final formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scafoldKey = GlobalKey<ScaffoldState>();
   String phoneno = '';
-  String password = '';
+  // String password = '';
   String devicetoken = '';
+
+  String code = '';
+  String password = '';
+  String repeatpassword = '';
+
+
 
   @override
   void initState() {
     super.initState();
-    _firebaseMessaging.getToken().then((token) {
-      devicetoken = token;
-      print(devicetoken);
-    });
+    phoneno = widget.phoneno;
   }
 
   @override
@@ -38,7 +46,7 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
     return Scaffold(
       key: _scafoldKey,
       appBar: AppBar(
-        title: Text("Login Here"),
+        title: Text("Reset Password"),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -57,7 +65,6 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
                 ),
                 // ),
               ),
-              forgotPassword(),
               Container(
                 margin: const EdgeInsets.only(bottom: 20),
               ),
@@ -79,8 +86,12 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
           Container(
             margin: const EdgeInsets.only(bottom: 20),
           ),
-          phoneField(),
+          codeField(),
+
           passwordField(),
+
+          repeatPasswordField(),
+    
           Container(
             margin: EdgeInsets.only(top: 25.0),
           ),
@@ -128,17 +139,23 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
     );
   }
 
-  Widget phoneField() {
+  Widget codeField() {
     return TextFormField(
-      keyboardType: TextInputType.phone,
+      keyboardType: TextInputType.number,
       decoration: InputDecoration(
-        labelText: 'Phone No',
-        hintText: '0245424859',
+        labelText: 'Reset Code',
+        hintText: 'Enter Reset Code',
       ),
-      validator: validatePhoneNo,
+      validator: (String value){
+          if(value == null || value ==""){
+             return "Please enter reset code";
+          }else{
+            return null;
+          }
+      },
       onChanged: (String value) {
         setState(() {
-          phoneno = value;
+          code = value;
         });
       },
     );
@@ -146,10 +163,9 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
 
   Widget passwordField() {
     return TextFormField(
-      obscureText: true,
       decoration: InputDecoration(
-        labelText: 'Enter Password',
-        hintText: 'Your Password',
+        labelText: 'New Password',
+        hintText: 'Enter New Password',
       ),
       validator: validatePassword,
       onChanged: (String value) {
@@ -160,6 +176,28 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
     );
   }
 
+    Widget repeatPasswordField() {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: 'Repeat Password',
+        hintText: 'Repeat Password',
+      ),
+      validator: (String confirmpassword){
+        if(confirmpassword != password){
+            return "Repeat Password must match password";
+        }else{
+          return null;
+        }
+      },
+      onChanged: (String value) {
+        setState(() {
+          repeatpassword = value;
+        });
+      },
+    );
+  }
+
+
   Widget btnField(AppState appState) {
     return Container(
       width: double.infinity,
@@ -169,11 +207,16 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
           if (formKey.currentState.validate()) {
             formKey.currentState.save();
             loadingBar();
-            appState.loginUser(phoneno, password, devicetoken).then((response) {
+            appState.resetPassword(phoneno, code, password,repeatpassword).then((response) {
               _scafoldKey.currentState.removeCurrentSnackBar();
-              if (response == true) {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => HomeScreen()));
+              if (response['status'] == 'success') {
+                showResetSuccess(response['message']);
+
+                Future.delayed(const Duration(milliseconds: 1500), () {
+                 Navigator.of(context).pop(); 
+                });
+               
+                
               } else {
                 showLoginError("Unable to Login. Please try again");
               }
@@ -182,7 +225,7 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
         },
         color: Colors.blue,
         child: Text(
-          "LOGIN",
+          "RESET PASSWORD",
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -194,16 +237,15 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
       margin: EdgeInsets.all(10.0),
       child: Row(
         children: <Widget>[
-          Text('Dont have an account?'),
+          Text('Remembered Password'),
           Expanded(
             child: RaisedButton(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20.0)),
               onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (conttext) => RegisterScreen()));
+                Navigator.of(context).pop();
               },
-              child: Text('SIGN UP'),
+              child: Text('LOGIN HERE'),
             ),
           )
         ],
@@ -220,7 +262,7 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
         children: <Widget>[
           new CircularProgressIndicator(),
           new Text(
-            "  Signing-In...",
+            "  Resetting Password...",
             style: TextStyle(color: Colors.white),
           )
         ],
@@ -244,16 +286,20 @@ class LoginScreenState extends State<LoginScreen> with ValidationMixin {
     ));
   }
 
-  forgotPassword() {
-    return FlatButton(
-      onPressed: () {
-         Navigator.push(context,
-                    MaterialPageRoute(builder: (conttext) => ForgotPasswordScreen()));
-        
-      },
-      child: Text(
-        "Forgot Password?",
+    showResetSuccess(String message) {
+    return _scafoldKey.currentState.showSnackBar(new SnackBar(
+      backgroundColor: Colors.green,
+      duration: new Duration(seconds: 10),
+      content: new Row(
+        children: <Widget>[
+          new Icon(Icons.close),
+          new Text(
+            " $message ",
+            style: TextStyle(color: Colors.white),
+          )
+        ],
       ),
-    );
+    ));
   }
+
 }

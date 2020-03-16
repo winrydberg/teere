@@ -1,6 +1,7 @@
 import 'package:dfmc/src/mixins/validation_mixin.dart';
 import 'package:dfmc/src/providers/appsate.dart';
 import 'package:dfmc/src/screens/home.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,16 +15,31 @@ class RegisterScreen extends StatefulWidget {
 class RegisterScreenState extends State<RegisterScreen> with ValidationMixin {
   final formKey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scafoldKey = GlobalKey<ScaffoldState>();
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
   String email = '';
   String password = '';
   String confirmPassword = '';
   String firstname = '';
   String lastname = '';
   String phoneno = '';
+  String devicetoken='';
+
+
+  @override
+  void initState() {
+    super.initState();
+    _firebaseMessaging.getToken().then((token) {
+       devicetoken = token;
+       print(devicetoken);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+
     final appState = Provider.of<AppState>(context);
+
+    
     return Scaffold(
       key: _scafoldKey,
       appBar: AppBar(
@@ -231,6 +247,7 @@ class RegisterScreenState extends State<RegisterScreen> with ValidationMixin {
             'email': email,
             'phoneno': phoneno,
             'password': password,
+            'devicetoken': devicetoken
           };
           if (formKey.currentState.validate()) {
             formKey.currentState.save();
@@ -247,7 +264,7 @@ class RegisterScreenState extends State<RegisterScreen> with ValidationMixin {
           }
 
         },
-        color: Color(0xFF6B1024),
+        color: Colors.blue,
         child: Text(
           "REGISTER",
           style: TextStyle(color: Colors.white),

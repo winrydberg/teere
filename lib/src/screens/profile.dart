@@ -20,7 +20,12 @@ class ProfileScreenState extends State<ProfileScreen> {
     final appState = Provider.of<AppState>(context);
     // getUserinfo();
     Map<String, dynamic> user;
-    return Container(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Profile"),
+        centerTitle: true,
+      ),
+      body: Container(
         child:  FutureBuilder(
           future: appState.getData(),
           builder: (context, snapshot) {
@@ -67,7 +72,11 @@ class ProfileScreenState extends State<ProfileScreen> {
             }
           },
         ),
+    ),
     );
+    
+    
+    
   }
 
   Widget logo() {

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dfmc/src/providers/appsate.dart';
+import 'package:dfmc/src/screens/new_expenditure.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -20,14 +21,14 @@ class ApplicationtepperState extends State<ApplicationScreen> {
   DateTime selectedDate = DateTime.now();
   TextEditingController dateCtl = TextEditingController();
   int currentstep = 0;
-  List<String> errors =[];
+  List<String> errors = [];
   List<String> mstatus = ['Single', 'Married', 'Divorced'];
   List<String> idtype = ["Voter ID", "Driver License", "NHIS", "Ghana Card"];
   List<String> disabilityTypes = [
     "Visually Impaired",
     "Hearing Impaired",
     "Physically Disabled",
-    "Mental/Intellectual",
+    "Mental or Intellectual",
     "Albino",
     "Others"
   ];
@@ -46,7 +47,7 @@ class ApplicationtepperState extends State<ApplicationScreen> {
   String idnumber;
   String ismembergfd;
 
-  String disabilitytype;
+  List<String> disabilitytype = [];
   String otherdisabilitytype;
 
   String community;
@@ -70,6 +71,12 @@ class ApplicationtepperState extends State<ApplicationScreen> {
   bool chkboxVal4 = false;
   bool chkboxVal5 = false;
 
+  bool chkdisVal = false;
+  bool chkdisVal2 = false;
+  bool chkdisVal3 = false;
+  bool chkdisVal4 = false;
+  bool chkdisVal5 = false;
+
   String amount;
   String fundintents;
   String beneficiaries;
@@ -81,6 +88,11 @@ class ApplicationtepperState extends State<ApplicationScreen> {
 
   String budgets;
   String agreed = 'accepted';
+  var listOfFields = <Widget>[];
+  int fieldCount = 1;
+  List<List<TextEditingController>> listofInputControllers = [];
+
+  List<Map<String, dynamic>> expenditure = [];
 
   @override
   void initState() {
@@ -90,6 +102,14 @@ class ApplicationtepperState extends State<ApplicationScreen> {
   @override
   Widget build(BuildContext context) {
     final iappState = Provider.of<AppState>(context);
+    var itemControllers = [
+      new TextEditingController(),
+      new TextEditingController(),
+      new TextEditingController(),
+      new TextEditingController(),
+    ];
+    listofInputControllers.add(itemControllers);
+    listOfFields.add(singleBreakdown(0));
 
     return Scaffold(
       key: _scafoldKey,
@@ -123,15 +143,15 @@ class ApplicationtepperState extends State<ApplicationScreen> {
               setState(() {
                 if (currentstep < mysteps(context).length - 1) {
                   appState = iappState;
-                  if(currentstep ==0){
-                    if(_image ==null){
-                        showLoginError("Passport Picture is required");
-                    }else{
-                        currentstep = currentstep + 1;
+                  if (currentstep == 0) {
+                    if (_image == null) {
+                      showLoginError("Passport Picture is required");
+                    } else {
+                      currentstep = currentstep + 1;
                     }
+                  } else {
+                    currentstep = currentstep + 1;
                   }
-                  
-
                 } else {
                   currentstep = 0;
                   appState = iappState;
@@ -147,7 +167,7 @@ class ApplicationtepperState extends State<ApplicationScreen> {
 
   List<Step> mysteps(context) {
     List<Step> allsteps = [
-       Step(
+      Step(
           title: Text(""),
           content: imageField(),
           isActive: this.currentstep == 0 ? true : false),
@@ -244,41 +264,129 @@ class ApplicationtepperState extends State<ApplicationScreen> {
 
   Widget disabilityType() {
     return Container(
-      child: Column(
-        children: <Widget>[
-          Text(
-            "Type Of Disability",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Container(
-            margin: const EdgeInsets.only(
-              top: 20.0,
-            ),
-            width: double.infinity,
-            child: DropdownButton<String>(
-              value: disabilitytype,
-              hint: Text('Disability Type'),
-              underline: Container(
-                height: 1,
-                color: Colors.grey,
+        child: Column(
+      children: <Widget>[
+        Text(
+          "Choose a Disability Type",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        Container(
+          child: Row(
+            children: <Widget>[
+              Checkbox(
+                onChanged: (bool value) {
+                  if (value == true) {
+                    setState(() {
+                      chkdisVal = value;
+                      addToDisability("Visually Impaired");
+                    });
+                  } else {
+                    setState(() {
+                      chkdisVal = value;
+                      removeFromDisability("Visually Impaired");
+                    });
+                  }
+                },
+                value: chkdisVal,
               ),
-              items: disabilityTypes.map((String value) {
-                return new DropdownMenuItem<String>(
-                  value: value,
-                  child: new Text(value),
-                );
-              }).toList(),
-              onChanged: (newValue) {
-                setState(() {
-                  disabilitytype = newValue;
-                });
-              },
-            ),
+              Text("Visually Impaired")
+            ],
           ),
-          otherDisabilityType(),
-        ],
-      ),
-    );
+        ),
+        Container(
+          child: Row(
+            children: <Widget>[
+              Checkbox(
+                onChanged: (bool value) {
+                  if (value == true) {
+                    setState(() {
+                      chkdisVal2 = value;
+                      addToDisability("Hearing Impaired");
+                    });
+                  } else {
+                    setState(() {
+                      chkdisVal2 = value;
+                      removeFromDisability("Hearing Impaired");
+                    });
+                  }
+                },
+                value: chkdisVal2,
+              ),
+              Text("Hearing Impaired")
+            ],
+          ),
+        ),
+        Container(
+          child: Row(
+            children: <Widget>[
+              Checkbox(
+                onChanged: (bool value) {
+                  if (value == true) {
+                    setState(() {
+                      chkdisVal3 = value;
+                      addToDisability("Physically Disabled");
+                    });
+                  } else {
+                    setState(() {
+                      chkdisVal3 = value;
+                      removeFromDisability("Physically Disabled");
+                    });
+                  }
+                },
+                value: chkdisVal3,
+              ),
+              Text("Physically Disabled")
+            ],
+          ),
+        ),
+        Container(
+          child: Row(
+            children: <Widget>[
+              Checkbox(
+                onChanged: (bool value) {
+                  if (value == true) {
+                    setState(() {
+                      chkdisVal4 = value;
+                      addToDisability("Mental / Intellectual");
+                    });
+                  } else {
+                    setState(() {
+                      chkdisVal4 = value;
+                      removeFromDisability("Mental / Intellectual");
+                    });
+                  }
+                },
+                value: chkdisVal4,
+              ),
+              Text("Mental / Intellectual")
+            ],
+          ),
+        ),
+        Container(
+          child: Row(
+            children: <Widget>[
+              Checkbox(
+                onChanged: (bool value) {
+                  if (value == true) {
+                    setState(() {
+                      chkdisVal5 = value;
+                      addToDisability("Albino");
+                    });
+                  } else {
+                    setState(() {
+                      chkdisVal5 = value;
+                      removeFromDisability("Albino");
+                    });
+                  }
+                },
+                value: chkdisVal5,
+              ),
+              Text("Albino")
+            ],
+          ),
+        ),
+      ],
+    ));
   }
 
   otherDisabilityType() {
@@ -298,6 +406,16 @@ class ApplicationtepperState extends State<ApplicationScreen> {
     } else {
       return Container();
     }
+  }
+
+  addToDisability(String res) {
+    disabilitytype.add(res);
+    print(disabilitytype);
+  }
+
+  removeFromDisability(String res) {
+    disabilitytype.removeWhere((item) => item == res);
+    print(disabilitytype);
   }
 
   Widget contactDetails() {
@@ -434,7 +552,6 @@ class ApplicationtepperState extends State<ApplicationScreen> {
                                 .map((Map<String, dynamic> value) {
                               return new DropdownMenuItem<String>(
                                 value: value["name"],
-
                                 child: new Text(value["name"]),
                               );
                             }).toList(),
@@ -447,7 +564,7 @@ class ApplicationtepperState extends State<ApplicationScreen> {
                           ),
                         ),
                       ),
-                       Expanded(
+                      Expanded(
                         flex: 1,
                         child: Container(
                           margin: const EdgeInsets.only(
@@ -624,11 +741,10 @@ class ApplicationtepperState extends State<ApplicationScreen> {
                       chkboxVal2 = value;
                       addToReason("Medical/Assistive devices");
                     });
-                    
                   } else {
                     setState(() {
                       chkboxVal2 = value;
-                       removeFromReason("Medical/Assistive devices");
+                      removeFromReason("Medical/Assistive devices");
                     });
                   }
                 },
@@ -777,92 +893,380 @@ class ApplicationtepperState extends State<ApplicationScreen> {
   }
 
   allBudget() {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          heading(),
+          renderExpenditure(),
+          Container(
+            margin: const EdgeInsets.only(bottom: 10, top: 20),
+            child: RaisedButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: new BorderRadius.circular(18.0),
+                side: BorderSide(color: Colors.red),
+              ),
+              onPressed: () async {
+                final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ExpenditureScreen()));
+                if (result != null) {
+                  setState(() {
+                    expenditure.add(result);
+                  });
+                }
+              },
+              child: Text("ADD EXPENDITURE"),
+            ),
+          ),
+          submitButtonField()
+        ],
+      ),
+    );
+  }
+
+  renderExpenditure() {
+    if (expenditure.length <= 0) {
+      return Container(
+        margin: const EdgeInsets.all(15.0),
+        child: Text('No Expenditure Added'),
+      );
+    } else {
+      return Container(
+        child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: expenditure.length,
+            itemBuilder: (BuildContext context, int index) {
+              return ItemRow(expenditure[index]);
+            }),
+      );
+    }
+  }
+
+  Widget ItemRow(Map<String, dynamic> item) {
+    return Container(
+      // margin: const EdgeInsets.only(b: 5.0, right: 5.0),
+      decoration: BoxDecoration(
+          border: Border.all(
+        color: Colors.lightBlue[800],
+      )),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            flex: 1,
+            child: Container(
+              height: 30,
+              child: Center(child: Text("${item["item"]}")),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              height: 30,
+              child: Center(child: Text("${item["qty"]}")),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              height: 30,
+              child: Center(child: Text("${item["unitcost"]}")),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              height: 30,
+              child: Center(child: Text("${item["totalcost"]}")),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  allBudgetold() {
     return Column(
       children: <Widget>[
+        ListView.builder(
+            shrinkWrap: true,
+            itemCount: fieldCount,
+            itemBuilder: (context, index) {
+              return listOfFields[index];
+            }),
         Container(
-          child: TextFormField(
-            maxLines: 7,
-            initialValue: budgets,
-            decoration: InputDecoration(
-                labelText: "Budget Breakdown",
-                hintText:
-                    "Please provide detailed breakdown of how requested money will be spent.",
-                border: OutlineInputBorder()),
-            onChanged: (String text) {
-              setState(() {
-                budgets = text;
-              });
-            },
+          margin: const EdgeInsets.only(
+            top: 15.0,
+          ),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                flex: 1,
+                child: RaisedButton(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(18.0),
+                      side: BorderSide(color: Colors.red),
+                    ),
+                    onPressed: () {
+                      var itemControllers = [
+                        new TextEditingController(),
+                        new TextEditingController(),
+                        new TextEditingController(),
+                        new TextEditingController(),
+                      ];
+                      listofInputControllers.add(itemControllers);
+
+                      listOfFields.add(
+                          singleBreakdown(listofInputControllers.length - 1));
+                      setState(() {
+                        fieldCount += 1;
+                      });
+
+                      print(listOfFields.toString());
+                    },
+                    child: Text("NEW FIELD")),
+              ),
+              Container(
+                margin: const EdgeInsets.all(5.0),
+              ),
+              Expanded(
+                flex: 1,
+                child: RaisedButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: new BorderRadius.circular(18.0),
+                        side: BorderSide(color: Colors.red)),
+                    color: Colors.red,
+                    onPressed: () {
+                      listOfFields.removeAt(fieldCount - 1);
+                      setState(() {
+                        fieldCount -= 1;
+                      });
+
+                      print(listOfFields.toString());
+                    },
+                    child: Text("DELETE FIELD")),
+              )
+            ],
           ),
         ),
-        submitButtonField()
+        Container(
+          margin: const EdgeInsets.only(top: 15.0, bottom: 15.0),
+          child: submitButtonField(),
+        ),
+      ],
+    );
+  }
+
+  Widget heading() {
+    return Container(
+      height: 40.0,
+      // margin: const EdgeInsets.only(top: 5.0, left: 5.0, right: 5.0),
+      decoration: BoxDecoration(
+        color: Colors.lightBlue[800],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Expanded(
+            flex: 1,
+            child: Center(
+                child: Text(
+              "Item",
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            )),
+          ),
+          Expanded(
+            flex: 1,
+            child: Center(
+                child: Text(
+              "Qty",
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            )),
+          ),
+          Expanded(
+            flex: 1,
+            child: Center(
+                child: Text(
+              "Unit Cost",
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            )),
+          ),
+          Expanded(
+            flex: 1,
+            child: Center(
+                child: Text(
+              "Total Cost",
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget singleBreakdown(int fieldCnt) {
+    // return Text("Hellow World");
+    return Column(
+      children: <Widget>[
+        new Container(
+          child: new Column(
+            children: <Widget>[
+              new Row(
+                children: <Widget>[
+                  new Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: listofInputControllers[fieldCnt][0],
+                      decoration: new InputDecoration(
+                        labelText: "item",
+                        fillColor: Colors.white,
+                        border: new OutlineInputBorder(
+                          borderRadius: new BorderRadius.circular(30.0),
+                          borderSide: new BorderSide(),
+                        ),
+                      ),
+
+                      // decoration: InputDecoration(
+                      //   labelText: 'Item Name',
+                      //   hintText: 'Enter Item',
+                      // ),
+                      onChanged: (value) {
+                        print(value);
+                      },
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.all(5),
+                  ),
+                  new Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: listofInputControllers[fieldCnt][1],
+                      decoration: InputDecoration(
+                        labelText: 'Quantity',
+                        hintText: 'Enter Quantity',
+                      ),
+                      onChanged: (value) {
+                        print(value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              new Row(
+                children: <Widget>[
+                  new Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: listofInputControllers[fieldCnt][2],
+                      decoration: InputDecoration(
+                        labelText: 'Unit Cost',
+                        hintText: 'Enter Item',
+                      ),
+                      onChanged: (value) {
+                        print(value);
+                      },
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.all(5),
+                  ),
+                  new Expanded(
+                    flex: 1,
+                    child: TextField(
+                      controller: listofInputControllers[fieldCnt][3],
+                      decoration: InputDecoration(
+                        labelText: 'Total Cost',
+                        hintText: 'Enter Total Cost',
+                      ),
+                      onChanged: (value) {
+                        print(value);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        Divider(
+          thickness: 3,
+        )
       ],
     );
   }
 
   Widget submitButtonField() {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 10.0),
-      height: 50.0,
-      child: RaisedButton(
-        onPressed: () async {
-          Map<String, dynamic> user = {
-            'firstname': firstname,
-            'lastname': surname,
-            'file': _image,
-            'gender': gender,
-            'maritalstatus': maritalstatus,
-            'idtype': sidtype,
-            'dob': dateCtl.text,
-            'idnumber': idnumber,
-            'gfdmember': ismembergfd,
-            'disabilitytype': disabilitytype,
-            'communityname': community,
-            'houseno': houseno,
-            'postaladdress': postaladdress,
-            'phoneno': phoneno,
-            'streenname': streetname,
-            'bizlocation': bizlocation,
-            'education': education,
-            'occupation': occupation,
-            'yearsinbusiness': yearsinbusiness,
-            'dependants': dependants,
-            'objective': reasons.toString(),
-            'totalamount': amount,
-            'fundintents': fundintents,
-            'groupapplication': beneficiaries,
-            'budgets': budgets,
-            'region': region,
-            'district': district,
-            'agreed': agreed
-          };
-          if (formKey.currentState.validate()) {
-            formKey.currentState.save();
-           
-            if(validateAllInput() ==true){
-               loadingBar();
-                 appState.applying(user).then((response) {
-              _scafoldKey.currentState.removeCurrentSnackBar();
-              if (response == "1") {
-                showSuccessinfo("Application Successfully sent");
+    if (expenditure.length >= 1) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(top: 10.0),
+        height: 50.0,
+        child: RaisedButton(
+          onPressed: () async {
+            Map<String, dynamic> user = {
+              'firstname': firstname,
+              'lastname': surname,
+              'file': _image,
+              'gender': gender,
+              'maritalstatus': maritalstatus,
+              'idtype': sidtype,
+              'dob': dateCtl.text,
+              'idnumber': idnumber,
+              'gfdmember': ismembergfd,
+              'disabilitytype': disabilitytype,
+              'communityname': community,
+              'houseno': houseno,
+              'postaladdress': postaladdress,
+              'phoneno': phoneno,
+              'streenname': streetname,
+              'bizlocation': bizlocation,
+              'education': education,
+              'occupation': occupation,
+              'yearsinbusiness': yearsinbusiness,
+              'dependants': dependants,
+              'objective': reasons,
+              'totalamount': amount,
+              'fundintents': fundintents,
+              'groupapplication': beneficiaries,
+              'budgets': expenditure,
+              'region': region,
+              'district': district,
+              'agreed': agreed
+            };
+            if (formKey.currentState.validate()) {
+              formKey.currentState.save();
+
+              if (validateAllInput() == true) {
+                loadingBar();
+                appState.applying(user).then((response) {
+                  _scafoldKey.currentState.removeCurrentSnackBar();
+                  if (response == "1") {
+                    showSuccessinfo("Application Successfully sent");
+                  } else {
+                    showLoginError("Unable to Send Application.  Try again");
+                  }
+                });
               } else {
-                showLoginError("Unable to Send Application.  Try again");
+                showLoginError(errors[0]);
               }
-            });
-            }else{
-               showLoginError(errors[0]);
             }
-         
-          }
-        },
-        color: Colors.lightBlue[800],
-        child: Text(
-          "APPLY NOW",
-          style: TextStyle(color: Colors.white),
+          },
+          color: Colors.lightBlue[800],
+          child: Text(
+            "APPLY NOW",
+            style: TextStyle(color: Colors.white),
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      return Container();
+    }
   }
 
   loadingBar() {
@@ -898,7 +1302,7 @@ class ApplicationtepperState extends State<ApplicationScreen> {
     ));
   }
 
-   showSuccessinfo(String message) {
+  showSuccessinfo(String message) {
     return _scafoldKey.currentState.showSnackBar(new SnackBar(
       backgroundColor: Colors.green,
       duration: new Duration(seconds: 10),
@@ -917,10 +1321,10 @@ class ApplicationtepperState extends State<ApplicationScreen> {
   Widget imageField() {
     return Column(
       children: <Widget>[
-         Text(
-            "Passport Photo",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+        Text(
+          "Passport Photo",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         Center(
           child: Stack(
             alignment: AlignmentDirectional.topEnd,
@@ -937,9 +1341,7 @@ class ApplicationtepperState extends State<ApplicationScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle
-                        ),
+                        decoration: BoxDecoration(shape: BoxShape.circle),
                         child: Image.file(
                           snapshot.data,
                           // width: 70.0,
@@ -972,7 +1374,6 @@ class ApplicationtepperState extends State<ApplicationScreen> {
                 bottom: 0,
                 right: 0,
                 child: Container(
-                 
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(0xFF6B1024),
@@ -1208,21 +1609,22 @@ class ApplicationtepperState extends State<ApplicationScreen> {
     );
   }
 
-
-  removeFromReason(String res){
+  removeFromReason(String res) {
     reasons.removeWhere((item) => item == res);
     print(reasons);
   }
 
-  addToReason(String res){
+  addToReason(String res) {
     reasons.add(res);
     print(reasons);
   }
 
-  validateAllInput(){
-    if(_image ==null){
+  validateAllInput() {
+    if (_image == null) {
       errors.add("Passport Photo is required. Select passport size photo");
       return false;
+    } else {
+      return true;
     }
   }
 
